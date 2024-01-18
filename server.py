@@ -8,9 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, SubmitField, PasswordField, RadioField, SelectMultipleField, widgets, FloatField
 from wtforms.validators import DataRequired, Email
 from datetime import date, timedelta
-from keys import flask_keys,sql_key
 import os
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get("flask_key")
@@ -294,4 +292,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5004)
+    app.run(debug=False, port=5004)
