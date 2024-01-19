@@ -11,8 +11,7 @@ from datetime import date, timedelta
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "fjglfdjglfgldk"
-    #os.environ.get("flask_key"))
+app.config['SECRET_KEY'] = os.environ.get("flask_key")
 Bootstrap5(app)
 
 login_manager = LoginManager()
