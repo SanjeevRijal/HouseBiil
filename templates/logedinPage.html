@@ -73,12 +73,14 @@ include "header.html" %}
     {% for i in final_payment_dict %}
       <tr>
 
-        {% if final_payment_dict[i][0] > 0 %}
+        {% if final_payment_dict[i] > 0 %}
         <td style="color:green">To Recieve</td>
+        {% elif final_payment_dict[i] == 0.00 %}
+        <td>Balance Null</td>
         {% else %}
         <td style="color:Red">To Pay</td>
         {% endif%}
-        <td>{{final_payment_dict[i][0]|abs|round(2)}}</td>
+        <td>{{final_payment_dict[i]|abs|round(2)}}</td>
         <td>{{i}}</td>
 
 

@@ -11,7 +11,8 @@ from datetime import date, timedelta
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("flask_key")
+app.config['SECRET_KEY'] = "fjglfdjglfgldk"
+    #os.environ.get("flask_key"))
 Bootstrap5(app)
 
 login_manager = LoginManager()
@@ -93,7 +94,7 @@ def add_bills():
     bill_form = BillForm()
     results = db.session.execute(db.select(User).where(User.id != current_user.get_id())).scalars().all()
 
-    bill_form.split_with.choices = [(query.name, query.name) for query in results]
+    bill_form.split_with.choices = [(query.id, query.name) for query in results]
     if bill_form.validate_on_submit():
         new_bill = Bill(
             amount=bill_form.amount.data,
@@ -126,8 +127,6 @@ def add_bills():
 def home():
     current_date = date.today()
 
-    last_10_bills = db.session.execute(db.select(Bill)).scalars().all()
-
     # this block here is using function calculation to calculate receivable or payable
 
     bills_to_receive = db.session.execute(
@@ -137,7 +136,6 @@ def home():
     bills_to_pay = db.session.execute(
         db.select(Bill).where(Bill.spender_id != current_user.get_id())).scalars().all()
 
-
     # calculate what the user will have to pay
     to_pay = calculation(bills_to_pay, to_pay=True)
 
@@ -146,20 +144,19 @@ def home():
 
     final_payment_dict = {}
     for individual_bill in to_receive:
-        final_payment_dict[individual_bill] = []
         if individual_bill in to_pay:
-            final_payment_dict[individual_bill].append(to_receive[individual_bill] - to_pay[individual_bill])
+            final_payment_dict[individual_bill] = (to_receive[individual_bill] - to_pay[individual_bill])
         else:
-            final_payment_dict[individual_bill].append(to_receive[individual_bill])
+            final_payment_dict[individual_bill] = (to_receive[individual_bill])
 
     for individual_bill in to_pay:
         if individual_bill not in to_receive:
-            final_payment_dict[individual_bill] = []
-            final_payment_dict[individual_bill].append(-(to_pay[individual_bill]))
+            final_payment_dict[individual_bill] = (-(to_pay[individual_bill]))
+
 
     balance = 0
     for final_payment in final_payment_dict:
-        balance += final_payment_dict[final_payment][0]
+        balance += final_payment_dict[final_payment]
 
     # calculating last month spending against this month
     one_month_ago = current_date - timedelta(days=30)
@@ -174,10 +171,19 @@ def home():
     else:
         symbol = None
 
+
+    payment_dict = {}
+    for user_id in final_payment_dict:
+            user = db.session.execute(db.select(User).where(User.id == user_id)).scalar()
+            payment_dict[user.name] = final_payment_dict[user_id]
+
+
+
+
     return render_template("logedinPage.html"
-                           , last_10_bills=last_10_bills, result=this_month_result, balance=balance,
+                           , result=this_month_result, balance=balance,
                            symbol=symbol, is_logged=current_user.is_authenticated,
-                           final_payment_dict=final_payment_dict)
+                           final_payment_dict=payment_dict)
 
 
 def calculation(pass_bills, to_pay=False):
@@ -197,19 +203,21 @@ def calculation(pass_bills, to_pay=False):
         if not to_pay:
             for each_split_with in share_among:
                 to_receive_set.add(each_split_with)
+
         else:
-            to_give_set.add(bill_id.what_amount.name)
+            to_give_set.add(bill_id.spender_id)
 
         # creating dictionary of individual bill
         bill_dict = {
             "amount": bill_id.amount,
             "with_whom": share_among,
             "how_many_to split": len(share_among),
-            "spender_id": bill_id.what_amount.name, }
+            "spender_id": bill_id.spender_id, }
+
 
         # updating individual bill to this dictionary
         all_bill_in_dict[f'bill_id:{bill_id.id}'] = bill_dict
-
+    print(f'{all_bill_in_dict} all bill')
     final_dict_with_amount_to_receive = {}
     final_dict_with_amount_to_give = {}
     # creating empty dictionary of all user that needs to make or receive payment
@@ -219,17 +227,18 @@ def calculation(pass_bills, to_pay=False):
     else:
         for _ in to_give_set:
             final_dict_with_amount_to_give[_] = []
-
+    print(f'{to_give_set} give set')
+    print(f'{final_dict_with_amount_to_receive} to recieve')
+    print(f'{final_dict_with_amount_to_give} tp givev')
     # calculating final bills and returning values
     for individual_bill in all_bill_in_dict:
         values_to_calculate = all_bill_in_dict[individual_bill]
+        print(values_to_calculate)
         each_person_share = values_to_calculate["amount"] / (values_to_calculate["how_many_to split"] + 1)
 
         if not to_pay:
             for _ in values_to_calculate["with_whom"]:
-
                 final_dict_with_amount_to_receive[_].append(each_person_share)
-
         else:
             final_dict_with_amount_to_give[values_to_calculate["spender_id"]].append(each_person_share)
 
