@@ -14,12 +14,11 @@ from form import BillForm,Password_Reset,Conform_Password,RegisterForm,LoginForm
 app = Flask(__name__)
 
 
-app.config['SECRET_KEY'] = "shvlskhvlsdvhsdlkh"
-    #os.environ.get("flask_key"))
+app.config['SECRET_KEY'] = os.environ.get("flask_key")
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'hopsanjeev@gmail.com'
-app.config['MAIL_PASSWORD'] = "bywe srvy zvxu ofad"
+app.config['MAIL_USERNAME'] = os.environ.get("email")
+app.config['MAIL_PASSWORD'] = os.environ.get("password")
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
