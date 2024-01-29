@@ -1,6 +1,6 @@
 {% from "bootstrap5/form.html" import render_form %} {% block content %} {%
 include "header.html" %}
-
+<title>Login</title>
 <!-- Page Header -->
 <header
   class="masthead"
@@ -34,6 +34,8 @@ include "header.html" %}
       {% endif %}
     {% endwith %}
         {{ render_form(loginform,novalidate=True)}}
+        <hr style= "width:200px ;" />
+        <a  style = " font-weight: lighter;" class = "help_block"  href = "{{url_for('change_password')}}"> Forget Password? </a>
       </div>
     </div>
   </div>

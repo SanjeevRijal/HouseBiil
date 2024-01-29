@@ -1,0 +1,86 @@
+{% from "bootstrap5/form.html" import render_form %} {% block content %} {%
+include "header.html" %}
+<title>Bill</title>
+<!-- Page Header -->
+<header
+  class="masthead"
+  style="background-image: url('../static/assets/img/login-bg.jpg')"
+>
+  <div class="container position-relative px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+      <div class="col-md-10 col-lg-8 col-xl-7">
+        <div class="page-heading">
+          <h1>Bills ?? </h1>
+          <span class="subheading">All Bils</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="mb-4">
+  <div class="container">
+    <div class="row">
+
+
+      <!-- TODO: add a flash message here for users registering twice -->
+      <div class="col-lg-8 col-md-10 mx-auto">
+       <table class="table table-striped table-hover">
+
+        <thead>
+            <tr>
+
+              {% if not my_bill %} <th scope="col">Spender</th> {% endif %}
+              <th scope="col">Amount</th>
+              <th scope="col">Date</th>
+              <th scope="col">Share With</th>
+                <th scope="col">Catagory</th>
+
+
+            </tr>
+          </thead>
+          <tbody>
+          {% for item in data %}
+          <tr>
+              {% if not my_bill %}
+                <td>{{ item.what_amount.name}}</td>
+              {% endif %}
+                <td>{{ item.amount }}</td>
+                <td>{{ item.spend_date }}</td>
+              <td>{%for i  in item.who_pay%}
+                {{ i.split_among.name}}
+              {% endfor %} </td>
+              <td>{{ item.spend_type }}</td>
+              {% if my_bill %}
+              <td> <a href = "{{url_for('edit' , id =item.id) }}">Edit</a>&nbsp  <a href = "{{url_for('delete' ,id =item.id) }}">Delete</a> </td>
+                {% endif %}
+            </tr>
+
+          {% endfor %}
+
+          </tbody>
+  	  </table>
+        {% if not my_bill %}
+        <a class="btn btn-primary float-end"
+          href="{{ url_for('my_bill')}}"
+          >My Bills</a>
+          {% endif %}
+<!-- Pagination links -->
+<div class="pagination">
+    {% if data.has_prev %}
+    <a href="{{ url_for('bills', page=data.prev_num) }}">Previous</a>  &nbsp &nbsp
+  {% endif %}
+  <span>Page {{ data.page }} of {{ data.pages }}</span>
+
+  {% if data.has_next %}  &nbsp &nbsp
+    <a href="{{ url_for('bills', page=data.next_num) }}"> Next</a>
+  {% endif %}
+</div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+{% include "footer.html" %} {% endblock %}
+

@@ -8,7 +8,6 @@
     />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Login</title>
     {% block styles %}
     <!-- Load Bootstrap-Flask CSS here -->
     {{ bootstrap.load_css() }}
@@ -59,13 +58,6 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ms-auto py-4 py-lg-0">
-            <li class="nav-item">
-              <a
-                class="nav-link px-lg-3 py-3 py-lg-4"
-                href="{{ url_for('home') }}"
-                >Home</a
-              >
-            </li>
             {% if not is_logged %}
             <!-- TODO: Only show Login/Register if user is logged out. Otherwise show "Log Out" -->
             <li class="nav-item">
@@ -86,8 +78,15 @@
             <li class="nav-item">
               <a
                 class="nav-link px-lg-3 py-3 py-lg-4"
-                href="logout"
-                >Log Out</a
+                href="{{ url_for('home') }}"
+                >Home</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link px-lg-3 py-3 py-lg-4"
+                href="{{ url_for('bills') }}"
+                >Bills</a
               >
 
             </li>
@@ -97,8 +96,17 @@
                 href="{{ url_for('add_bills') }}"
                 >Add Bill</a
               >
-              {% endif %}
             </li>
+
+            <li class="nav-item">
+              <a
+                class="nav-link px-lg-3 py-3 py-lg-4"
+                href="logout"
+                >Log Out</a
+              >
+
+            </li>
+            {% endif %}
 
           </ul>
         </div>
