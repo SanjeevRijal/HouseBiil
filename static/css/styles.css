@@ -10858,3 +10858,12 @@ header.masthead .post-heading .meta a {
   color: #ee6f57;
   text-align: center;
 }
+
+.left-box, .right-box{
+    padding:10px;
+   box-shadow:3px 3px 10px red;
+   height:200px;
+   text-align:center;
+
+
+}

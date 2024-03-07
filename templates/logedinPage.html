@@ -21,38 +21,31 @@ include "header.html" %}
     <div class="row">
       <div class="col-lg-8 col-md-10 mx-auto">
         <div class="container mt-5">
-  <div class="row">
-    <div class="col-md-6">
-      <div class="left-box">
-        <h5>Spending so far</h5>
-        <i class="mdi mdi-arrow-up fs-2 text-success"></i>
-        <p class="mdi mdi-arrow-up fs-2 text-success">${{ result}}<img src="{{symbol}}"></p>
-      </div>
-    </div>
-    {% if is_logged %}
-    <div class="col-md-6">
-      <div class="right-box">
-        <h5>Your balance</h5>
-        {% if balance < 0%}
-        <p style="color:red">Oops, you need to pay in total <br><br>
-         ${{balance|round(2)|abs}}</p>
+          <div class="row">
+            <div class="col-md-6 left-box ">
+              <h5>Spending so far</h5>
+              <p class="mdi mdi-arrow-up fs-2 text-success">${{ result}}</i></p>
+            </div>
+            {% if is_logged %}
+            <div class="col-md-6 right-box">
 
-        {% elif balance > 0 %}
-        <p style="color:green">Great, you will receive. <br><br>
-         ${{balance|abs|round(2)}}</p>
+              <h5>Your balance</h5>
+              {% if balance < 0%}
+              <p style="color:red">Oops, you need to pay in total <br>
+               ${{balance|round(2)|abs}}</p>
 
-        {%else %}
-        <p>${{balance|round(2)|abs}}</p>
+              {% elif balance > 0 %}
+              <p style="color:green;">Great, you will receive.<br>
+              ${{balance|abs|round(2)}}</p>
 
-      {% endif %}
-
-
-      </div>
-    </div>
-    {% endif %}
-  </div>
-</div>
-
+              {%else %}
+              <p>${{balance|round(2)|abs}}</p>
+              {% endif %}
+            </div>
+            {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -60,25 +53,18 @@ include "header.html" %}
 
 <div class="container mt-3">
   <h2>Calculation in Detail
-  <a class="btn btn-primary float-end"
-          href="{{ url_for('calculate_all')}}"
-          >Overall Calculation</a> </h2>
+    <a class="btn btn-primary float-end" href="{{ url_for('calculate_all')}}">Overall Calculation</a> </h2>
   <table class="table table-striped">
     <thead>
       <tr>
-
-         <th>To Receive/Pay</th>
+        <th>To Receive/Pay</th>
         <th>How Much</th>
-
         <th>To/From Whom</th>
-
-
       </tr>
     </thead>
     <tbody>
     {% for i in final_payment_dict %}
       <tr>
-
         {% if final_payment_dict[i] > 0 %}
         <td style="color:green">To Recieve</td>
         {% elif final_payment_dict[i] == 0.00 %}
@@ -88,10 +74,6 @@ include "header.html" %}
         {% endif%}
         <td>{{final_payment_dict[i]|abs|round(2)}}</td>
         <td>{{i}}</td>
-
-
-
-
       </tr>
   {% endfor %}
     </tbody>

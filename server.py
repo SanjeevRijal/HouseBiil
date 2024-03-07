@@ -1,81 +1,17 @@
-from flask import Flask, render_template, flash, redirect, url_for, request
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import JSON
-from sqlalchemy.orm import relationship
-from flask_bootstrap import Bootstrap5
-from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
+from flask import render_template, flash, redirect, url_for, request
+from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, timedelta, datetime
-import os
 import secrets
-from flask_mail import Mail, Message
+from flask_mail import Message
 from form import BillForm,Password_Reset,Conform_Password,RegisterForm,LoginForm
-
-app = Flask(__name__)
-
-
-app.config['SECRET_KEY'] = os.environ.get("flask_key")
-app.config['MAIL_SERVER']='smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = os.environ.get("email")
-app.config['MAIL_PASSWORD'] = os.environ.get("password")
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-
-Bootstrap5(app)
-mail = Mail(app)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
+from model import User, Bill, Payment, Split
+from config import db,app,mail,login_manager
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(User, user_id)
-
-
-# CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI","sqlite:///Spending.db")
-db = SQLAlchemy()
-db.init_app(app)
-
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(250), nullable=False)
-    password = db.Column(db.String(250), nullable=False)
-    name = db.Column(db.String(250), nullable=False)
-    reset_token = db.Column(db.String(100), nullable=True)
-    reset_token_expiration = db.Column(db.DateTime, nullable=True)
-    who_spend = relationship("Bill", back_populates="what_amount")
-    pay_share = relationship("Split", back_populates="split_among")
-
-
-class Bill(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    amount = db.Column(db.Float, nullable=False)
-    spend_type = db.Column(db.String(250), nullable=False)
-    spend_date = db.Column(db.Date, nullable=False)
-    spender_id = db.Column(db.Integer, db.ForeignKey(User.id))
-    what_amount = relationship("User", back_populates="who_spend")
-    who_pay = relationship("Split", back_populates="bill_detail")
-
-class Payment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    payment_dict = db.Column(db.JSON, nullable=False)
-    calculation_date= db.Column(db.Date, nullable=False)
-
-
-class Split(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    split_with = db.Column(db.Integer, db.ForeignKey(User.id))
-    bill_id = db.Column(db.Integer, db.ForeignKey(Bill.id))
-    split_among = relationship("User", back_populates="pay_share")
-    bill_detail = relationship("Bill", back_populates="who_pay")
-
-
-with app.app_context():
-    db.create_all()
 
 
 def select_user(current_user):
@@ -85,8 +21,8 @@ def select_user(current_user):
         user_id = current_user.id
     return user_id
 
+
 def payment(current_user):
-    current_date = date.today()
     first_day_of_month = datetime(datetime.now().year, datetime.now().month, 1)
 
     # this block here is using function calculation to calculate receivable or payable
@@ -118,7 +54,6 @@ def payment(current_user):
     balance = 0
     for final_payment in final_payment_dict:
         balance += final_payment_dict[final_payment]
-
 
     payment_dict = {}
     for user_id in final_payment_dict:
@@ -187,6 +122,7 @@ def calculation(pass_bills, to_pay=False):
 
     return total
 
+
 @app.route("/calculate_all")
 def calculate_all():
     query = Payment.query.all()
@@ -210,7 +146,8 @@ def calculate_all():
     page = request.args.get('page', 1, type=int)
     per_page = 1
     data = Payment.query.paginate(page=page, per_page=per_page, error_out=True)
-    return render_template ("all_calculation.html", data = data,is_logged=current_user.is_authenticated)
+    return render_template ("all_calculation.html", data = data,
+                            is_logged=current_user.is_authenticated)
 
 
 @app.route("/add_bill", methods=["GET", "POST"])
@@ -242,6 +179,7 @@ def add_bills():
             db.session.add(split_with)
             db.session.commit()
         calculate_all()
+
         return redirect(url_for("home"))
 
     return render_template("add_bill.html", form=bill_form,
@@ -260,7 +198,7 @@ def home():
     last_month_result = sum(last_month)
     this_month_result = sum(this_month)
     if last_month_result < this_month_result:
-        symbol = "static/assets/img/arrowup.png"
+        symbol = "<i class='fas fa-arrow-up' style='font-size:36px'></i>"
     elif last_month_result > this_month_result:
         symbol = "static/assets/img/arrowdown.png"
     else:
@@ -345,6 +283,7 @@ def send_password_reset_email(user):
     If you did not make this request, ignore this email.
     '''
     mail.send(msg)
+
 @app.route("/reset_password/<token>", methods = ["GET", "POST"])
 def reset_password(token):
     user = User.query.filter_by(reset_token=token).filter(User.reset_token_expiration > datetime.utcnow()).first()
@@ -374,13 +313,15 @@ def bills():
     data = Bill.query.paginate(page=page, per_page=per_page, error_out=False)
     return render_template('bill.html', data=data, is_logged=current_user.is_authenticated)
 
+
 @app.route("/mybill")
 def my_bill():
     page = request.args.get('page', 1, type=int)
     per_page = 10
-    #filter_conditions = {spender_id:select_user(current_user)}
     data = Bill.query.filter_by(spender_id = select_user(current_user)).paginate(page=page, per_page=per_page, error_out=False)
     return render_template('bill.html', data = data, is_logged=current_user.is_authenticated, my_bill = True)
+
+
 @app.route("/edit_bill<id>", methods = ["POST","GET"])
 @login_required
 def edit(id):
@@ -420,7 +361,8 @@ def edit(id):
     bill_form.split_with.choices = [(query.id, query.name) for query in results]
     return render_template("add_bill.html" , form = bill_form,is_logged=current_user.is_authenticated)
 
-@app.route("/dekete_bill <id>")
+
+@app.route("/delete_bill <id>")
 def delete(id):
     bill = Bill.query.filter_by(id = id).first()
     print(id)
@@ -434,4 +376,7 @@ def delete(id):
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+
     app.run(debug=True, port=5004)
